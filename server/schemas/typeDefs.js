@@ -6,10 +6,21 @@ type User {
   password: String
 }
 
-type Query {
-  users: [User]
+type Book {
+  _id: ID
+  bookId: String
 }
 
+type Query {
+  me: [User]
+}
+
+type Mutation {
+  #login:(email: String!, password: String!)
+  addUser(username: String!, email: String!, password: String!): User
+  #saveBook: 
+  removeBook(bookId: String!): Book
+}
 
 `;
 
