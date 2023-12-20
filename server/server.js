@@ -5,43 +5,43 @@ const routes = require("./routes");
 const { ApolloServer } = require("@apollo/server");
 const { expressMiddleware } = require("@apollo/server/express4");
 const { typeDefs, resolvers } = require("./schemas");
-// const { authMiddleware } = require('./utils/auth');
+const { authMiddleware } = require("./utils/auth");
 
 const PORT = process.env.PORT || 3003;
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  introspection: true,
 });
 
 const app = express();
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// if we're in production, serve client/build as static assets
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/build")));
+// If we're in production, serve client/build as static assets
 
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../client/build.html"));
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
   });
 }
+
 
 const startApolloServer = async () => {
   await server.start();
 
   app.use(
     "/graphql",
-    expressMiddleware(server
-    //   , {
-    //   context: authMiddleware,
-    // }
-    )
+    expressMiddleware(server, {
+      context: authMiddleware,
+    })
   );
-  app.use(routes);
 
-  app.use(express.urlencoded({ extended: false }));
-  app.use(express.json());
+  app.use(routes);
 
   db.once("open", () => {
     app.listen(PORT, () => {

@@ -1,19 +1,29 @@
 const { User } = require("../models");
-
+const { signToken, AuthenticationError } = require("../utils/auth");
 const resolvers = {
-  //quries all users. don't really need this for the front end.
   Query: {
-    me: async () => {
-      return await User.find({});
-    },
-    findOneUser: async (parent, { userId }) => {
-      return User.findOne({ _id: userId });
+    getSingleUser: async (parent, { username }) => {
+      return User.findOne({ username });
     },
   },
 
   Mutation: {
-    addUser: async (parent, { username, email, password }) => {
-      return await User.create({ username, email, password });
+    createUser: async (parent, { username, email, password }) => {
+      const newUser = await User.create({ username, email, password });
+      const token = signToken(newUser);
+      return { token, newUser };
+    },
+    login: async (parent, { username, password }) => {//need to confirm the login page
+      const foundUser = await User.findOne({ username });
+
+      if (!foundUser) {
+        throw AuthenticationError;
+      }
+      const correctPw = await foundUser.isCorrectPassword(password);
+      if (!correctPw) throw AuthenticationError;
+
+      const token = signToken(foundUser);
+      return { token, foundUser };
     },
   },
 };
